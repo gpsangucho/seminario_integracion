@@ -1,4 +1,5 @@
 # Ignorar archivos de Python
+# francisco-higuera.netlify.app
 *.pyc
 *.pyo
 *.pyd
