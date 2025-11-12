@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'catalog',
     #'invoices',
     'invoices.apps.InvoicesConfig',
+    'warehouses',
 ]
 
 MIDDLEWARE = [
