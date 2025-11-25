@@ -23,5 +23,6 @@ urlpatterns = [
     path('api/', include('users.urls')),     # Parte 1
     path('api/', include('catalog.urls')),   # Parte 2: /api/categories/ y /api/products/
     path('api/', include('invoices.urls')),   # Parte 3
-    path('api/', include('warehouses.urls')) # api/warehouses/list
+    path('api/', include('warehouses.urls')), # api/warehouses/list
+    path('api/', include('basics.urls')),
 ]

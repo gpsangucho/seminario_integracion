@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     #'invoices',
     'invoices.apps.InvoicesConfig',
     'warehouses',
+    'basics',
 ]
 
 MIDDLEWARE = [
@@ -86,9 +87,9 @@ WSGI_APPLICATION = 'billing_api.wsgi.application'
 DATABASES={
   'default':{
     'ENGINE':'django.db.backends.postgresql',
-    'NAME':os.getenv('DB_NAME','programacion4'),
+    'NAME':os.getenv('DB_NAME','programacion4_db'),
     'USER':os.getenv('DB_USER','postgres'),
-    'PASSWORD':os.getenv('DB_PASS','postgres'),
+    'PASSWORD':os.getenv('DB_PASS','root'),
     'HOST':os.getenv('DB_HOST','localhost'),
     'PORT':os.getenv('DB_PORT','5432')
   }
