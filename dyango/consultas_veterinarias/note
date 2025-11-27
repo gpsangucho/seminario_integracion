@@ -1,0 +1,14 @@
+Pasos realizados
+1.- Activar el entorno virtual
+2.- Crear el proyecto
+3.- Crear las app
+4.- Crear carpetas model, views, serielizer + urls.py en cada app, agregando en las carpetas __init__.py
+5.- Registrar app en setting.py del proyecto
+6.- Configurar la BDD y registrarlo en setting.py
+7.- Configuración del models. En base a la BDD. Definir relaciones y cardinalidades
+8.- Definir Serializer. Se toma una plantilla general. Se pasa la clase y se define los campos a visualizar.
+9.- Definir los View: con funciones y decorador, con clases o con viewset (CRUD automatico)
+10.- Configurar rutas: global y local en cada app
+11.- completar los archivos __init__ de cada carpeta para permitir la importación local y externa de la app
+12.- Rehacer la BDD: "python manage.py makemigrations" y "Python manage.py migrate"
+13.- Subir el servidor para probar: Python manage.py runserver
