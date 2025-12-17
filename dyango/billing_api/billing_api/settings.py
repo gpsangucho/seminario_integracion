@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'invoices.apps.InvoicesConfig',
     'warehouses',
     'basics',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -89,7 +90,7 @@ DATABASES={
     'ENGINE':'django.db.backends.postgresql',
     'NAME':os.getenv('DB_NAME','programacion4_db'),
     'USER':os.getenv('DB_USER','postgres'),
-    'PASSWORD':os.getenv('DB_PASS','root'),
+    'PASSWORD':os.getenv('DB_PASS','postgres'),
     'HOST':os.getenv('DB_HOST','localhost'),
     'PORT':os.getenv('DB_PORT','5432')
   }
