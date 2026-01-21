@@ -1,0 +1,45 @@
+Escribe un número
+Escribe otro número
+La suma es: 0
+
+Suma 2
+
+0
+0
+La suma es: 0
+
+0
+0
+El total es: 0
+
+0
+0
+la suma es: 0
+
+Base
+Altura
+Caldular Area
+El Area es: 0
+
+Base Mayor
+Base Menor
+Altura
+Caldular Area
+El Area es: 0
+
+Lun: 
+0
+Mar: 
+0
+Mier: 
+0
+Jue: 
+0
+Vie: 
+0
+Resumen
+Total horas 0
+
+Horas extras 0
+
+Pago Total $-200.00
