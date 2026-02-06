@@ -1,0 +1,19 @@
+Cambiamos por manufacturera a manufacturera, o tema del caso
+
+CREATE USER manufacturera_user WITH PASSWORD 'admin123';
+CREATE DATABASE manufacturera_db OWNER manufacturera_user;
+
+\c manufacturera_db
+
+ALTER SCHEMA public OWNER TO manufacturera_user;
+GRANT ALL ON SCHEMA public TO manufacturera_user;
+GRANT CREATE ON SCHEMA public TO manufacturera_user;
+
+ALTER DEFAULT PRIVILEGES FOR USER manufacturera_user IN SCHEMA public
+GRANT ALL ON TABLES TO manufacturera_user;
+
+ALTER DEFAULT PRIVILEGES FOR USER manufacturera_user IN SCHEMA public
+GRANT ALL ON SEQUENCES TO manufacturera_user;
+
+ALTER DEFAULT PRIVILEGES FOR USER manufacturera_user IN SCHEMA public
+GRANT ALL ON FUNCTIONS TO manufacturera_user;

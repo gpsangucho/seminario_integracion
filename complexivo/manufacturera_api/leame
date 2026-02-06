@@ -1,0 +1,40 @@
+Server [localhost]:
+Database [postgres]:
+Port [5432]:
+Username [postgres]:
+Password for user postgres:
+
+psql (17.2)
+WARNING: Console code page (437) differs from Windows code page (1252)
+         8-bit characters might not work correctly. See psql reference
+         page "Notes for Windows users" for details.
+Type "help" for help.
+
+postgres=#
+postgres=# CREATE USER manufacturera_user WITH PASSWORD 'admin123';
+CREATE ROLE
+postgres=# CREATE DATABASE manufacturera_db OWNER manufacturera_user;
+CREATE DATABASE
+postgres=#
+postgres=# \c manufacturera_db
+You are now connected to database "manufacturera_db" as user "postgres".
+manufacturera_db=#
+manufacturera_db=# ALTER SCHEMA public OWNER TO manufacturera_user;
+ALTER SCHEMA
+manufacturera_db=# GRANT ALL ON SCHEMA public TO manufacturera_user;
+GRANT
+manufacturera_db=# GRANT CREATE ON SCHEMA public TO manufacturera_user;
+GRANT
+manufacturera_db=#
+manufacturera_db=# ALTER DEFAULT PRIVILEGES FOR USER manufacturera_user IN SCHEMA public
+manufacturera_db-# GRANT ALL ON TABLES TO manufacturera_user;
+ALTER DEFAULT PRIVILEGES
+manufacturera_db=#
+manufacturera_db=# ALTER DEFAULT PRIVILEGES FOR USER manufacturera_user IN SCHEMA public
+manufacturera_db-# GRANT ALL ON SEQUENCES TO manufacturera_user;
+ALTER DEFAULT PRIVILEGES
+manufacturera_db=#
+manufacturera_db=# ALTER DEFAULT PRIVILEGES FOR USER manufacturera_user IN SCHEMA public
+manufacturera_db-# GRANT ALL ON FUNCTIONS TO manufacturera_user;
+ALTER DEFAULT PRIVILEGES
+manufacturera_db=#

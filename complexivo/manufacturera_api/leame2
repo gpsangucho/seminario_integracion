@@ -1,0 +1,6 @@
+(venv) PS Y:\seminario_integracion\complexivo\manufacturera_api> python manage.py createsuperuser
+Nombre de usuario (leave blank to use 'alumnos'): gsangucho
+Dirección de correo electrónico: gsangucho@email.com
+Password: gatito
+Password (again):
+Superuser created successfully.
