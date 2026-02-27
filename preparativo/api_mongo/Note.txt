@@ -1,0 +1,880 @@
+Instructivo:
+
+- Acceder a /mogoDB/server/…/bin
+- Editar el arhivo mongod.cfg
+
+security:
+  authorization: "enabled"
+
+- Descargar mongosh.exe y copiarlo en la dirección C:/.../mongoDB/.../bin
+- Agregar a las variable de entorno la ubicación de mogosh.exe: C:/.../mongoDB/.../bin
+- Verificar en la consola: mongosh --versión
+
+===================================================
+
+Usuarios.- En MongoDB, los usuarios:
+
+	- Se crean dentro de una base de datos
+	- Tienen roles
+	- Los roles contienen permisos
+
+	* Los permisos controlan acciones sobre recursos
+	* No existen “clases” como en programación.
+
+Existen usuarios + roles + privilegios.
+
+🔹 Usuario.- Tiene: username, password, roles
+
+🔹 Rol.- Un rol define:
+	- Qué acciones puede hacer (read, write, etc.)
+	- Sobre qué base de datos
+	* Mongo ya trae roles predefinidos.
+
+
+🔐 3️⃣ Tipos de roles (los más usados)
+En MongoDB existen roles integrados como:
+
+Rol		Qué permite
+- - - - - - - - - - - - - - - - - - - - - - -
+read		Solo lectura
+readWrite	Leer y escribir
+dbAdmin		Administrar base específica
+userAdmin	Crear y modificar usuarios
+clusterAdmin	Administrar el servidor
+root		Control total
+
+📍 4️⃣ ¿Dónde se crean los usuarios?
+
+MongoDB guarda los usuarios en la base de datos donde los creas. Por eso debe ubicarse dentro de la BDD antes de crearlas.
+
+⚠️ Pero los administradores normalmente se crean en:	use admin
+La base admin es especial.
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+🚀 5️⃣ Cómo crear un usuario
+
+1️⃣ Conéctate con mongosh: mongosh
+2️⃣ Ve a la base admin: use admin
+3️⃣ Crear usuario administrador (Eso crea un superusuario.)
+
+db.createUser({
+  user: "admin",
+  pwd: "123456",
+  roles: [
+    { role: "root", db: "admin" }
+  ]
+})
+
+Hay dos conceptos distintos:
+
+🔹 Dónde existe el usuario
+🔹 Dónde existe el rol que le estás asignando
+
+1️⃣ El db dentro de roles
+
+En esta parte: { role:"root", db:"admin" }
+
+👉 db NO es el recurso sobre el que actúa el rol.
+👉 Es la base de datos donde está definido ese rol.
+
+MongoDB necesita saber en qué base de datos buscar ese rol.
+
+2️⃣ Entonces… ¿sobre qué recursos actúa el rol?
+
+Eso se define cuando creas el rol, por ejemplo:
+
+db.createRole({
+  role: "usuario",
+  privileges: [
+    {
+      resource: { db: "veterinaria_db", collection: "" },
+      actions: ["find", "insert"]
+    }
+  ],
+  roles: []
+})
+
+Aquí sí defines:
+- resource.db → sobre qué base de datos actúa
+- collection → sobre qué colección (vacío = todas)
+- actions → qué puede hacer
+
+💡 El rol contiene los permisos.
+💡 El db dentro de createUser solo indica dónde está almacenado ese rol.
+
+
+
+🔎 6️⃣ Cómo verificar usuarios
+
+Ver usuarios de la base actual: db.getUsers()
+Ver todos los usuarios del sistema:
+	use admin
+	db.system.users.find()
+
+🔐 7️⃣ Cómo conectarse con usuario
+
+mongosh -u admin -p --authenticationDatabase admin
+
+* mongosh	------------------> Abre el cliente de MongoDB. mogosh es el cliente de línea de comandos oficial de MongoDB.
+* -u admin	------------------> Usuario con el que te conectas. Te estás conectando con el usuario llamado admin.
+*-p		------------------> Pedirá contraseña. Significa password. MongoDB te pedirá la contraseña de forma interactiva (más seguro).
+*--authenticationDatabase admin --> Base donde existe ese usuario. Es la base de datos donde está creado el usuario.
+
+🔹Nota:
+* Un usuario en MongoDB pertenece a una base de datos específica.
+* Si no especificas correctamente la base donde vive el usuario, la autenticación fallará.
+* La base a la que te conectas después → Es otra cosa distinta.
+
+🔹Ejemplo: Imagina que creaste el usuario así:
+
+	use veterinaria_db
+	db.createUser({...})
+
+Entonces deberías conectarte así: mongosh -u pperalta -p --authenticationDatabase veterinaria_db
+
+🔹Ejemplo: Ahora haciendo conexión directa a la BDD veterinaria_db
+
+mongosh -u admin -p --authenticationDatabase admin veterinaria_db
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+🎯 8️⃣ Cómo se controlan los permisos
+Los permisos controlan:
+- Crear y leer colecciones
+- Insertar documentos
+- Actualizar
+- Eliminar
+- Crear índices
+- Administrar usuarios
+- Administrar servidor
+
+Todo eso se controla mediante roles.
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+🛠 9️⃣ Crear usuario solo para una base
+Ejemplo:
+
+use tienda
+db.createUser({
+  user: "empleado",
+  pwd: "1234",
+  roles: [
+    { role: "readWrite", db: "tienda" }
+  ]
+})
+
+Ese usuario:
+✔ Solo puede usar la base tienda
+✔ No puede administrar otras bases
+✔ No puede crear usuarios
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+🧩 10️⃣ Crear roles personalizados (nivel avanzado)
+
+También puedes crear roles propios:
+
+db.createRole({
+  role: "soloInsertar",
+  privileges: [
+    {
+      resource: { db: "tienda", collection: "productos" },
+      actions: [ "insert" ]
+    }
+  ],
+  roles: []
+})
+
+Luego asignarlo a un usuario.
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+🔥 11️⃣ Activar autenticación (MUY IMPORTANTE)
+
+Si no activas autenticación, los usuarios no sirven.
+En el archivo mongod.cfg debes tener:
+
+security:
+  authorization: enabled
+
+Luego reinicias el servicio.
+🧠 Resumen Mental: MongoDB maneja seguridad así:
+
+Usuario → Tiene Roles → Roles tienen Permisos → Permisos actúan sobre Recursos
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+ACLARACIONES:
+
+Un usuario: Se crean dentro de una base, pero eso no significa que solo puedan actuar sobre esa base.
+En MongoDB, cada usuario:
+	- Se almacena físicamente dentro de una base
+	- Pero puede tener permisos sobre cualquier otra base
+
+Ejemplo:
+
+use admin
+
+db.createUser({
+  user: "juan",
+  pwd: "1234",
+  roles: [
+    { role: "readWrite", db: "ventas" }
+  ]
+})
+
+Aquí:
+	- El usuario está guardado en admin
+	- Pero tiene permisos sobre ventas
+
+⚠️ O sea: la base donde se crea ≠ la base donde puede operar
+
+🎯 2️⃣ Entonces… ¿para qué importa la base donde se crea?
+
+Importa por dos razones:
+
+🔹 1. Autenticación
+
+Cuando te conectas debes indicar dónde está definido el usuario:
+
+	- mongosh -u juan -p --authentication Database admin
+
+Ese admin significa: "Busca el usuario juan en la base admin"
+
+🔹 2. Organización
+
+Normalmente: 
+	- Usuarios globales → se crean en admin
+	- Usuarios específicos de una app → se crean en esa base
+
+Ejemplo:
+
+use tienda
+
+db.createUser({
+  user: "empleado",
+  pwd: "1234",
+  roles: [
+    { role: "readWrite", db: "tienda" }
+  ]
+})
+
+Aquí:
+	- El usuario vive en tienda
+	- Solo sirve para tienda
+
+🔐 3️⃣ Lo que realmente controla el acceso
+	- NO es la base donde se crea.
+	- Lo que controla el acceso es esto:
+
+roles: [
+  { role: "readWrite", db: "ventas" }
+]
+
+El rol define:
+	- Qué puede hacer
+	- En qué base puede hacerlo
+
+🧩 4️⃣ Ejemplo para entenderlo mejor
+
+Imagina:
+
+Usuario: pedro
+Guardado en: admin
+Permisos:
+  - read en base ventas
+  - readWrite en base inventario
+
+Pedro puede:
+
+✔ Leer ventas
+✔ Leer y escribir inventario
+❌ No puede tocar otras bases
+
+Aunque esté guardado en admin.
+
+🏗 5️⃣ Regla mental correcta
+
+Piensa así:
+
+Base donde se crea = dónde vive el usuario
+Rol = dónde puede trabajar
+
+🔥 6️⃣ Caso especial: base admin
+
+La base admin es especial en MongoDB.
+
+Si le das: { role: "root", db: "admin" }
+
+Tiene control total del servidor.
+
+📌 Respuesta directa a tu duda
+
+¿Los usuarios se crean dentro de una base sobre la cual se aplicarán los permisos?
+
+❌ No necesariamente.
+
+✔ Se crean en una base.
+✔ Los permisos los define el rol.
+✔ El rol puede apuntar a cualquier base.
+-------------------------------------------------------------------------
+1️⃣ ¿Los usuarios se almacenan en la base donde se crean?
+
+🎯 Resumen claro
+
+✔ Sí, el usuario se almacena en la base donde lo creas.
+✔ No, esa base no limita sus permisos.
+✔ Solo debes crear el rol antes si es personalizado.
+✔ Los permisos dependen exclusivamente de los roles.
+
+✅ Sí.
+
+En MongoDB los usuarios: Se guardan en la base de datos "activa" cuando ejecutas db.createUser()
+
+Internamente se almacenan en la colección del sistema: db.system.users
+
+Ejemplo:
+
+use tienda
+
+db.createUser({
+  user: "empleado",
+  pwd: "1234",
+  roles: [
+    { role: "readWrite", db: "tienda" }
+  ]
+})
+
+Ese usuario:
+	- Vive en la base tienda
+	- Se autentica contra tienda
+	- Pero podría tener permisos en otra base si el rol lo indica
+
+2️⃣ ¿Se debe crear primero el rol y luego el usuario?
+
+Depende.
+
+🔹 Caso A: Usas roles predefinidos (lo más común)
+
+NO necesitas crear el rol antes.
+Mongo ya trae roles como:
+
+. read
+. readWrite
+. dbAdmin
+. userAdmin
+. root
+
+Entonces puedes crear directamente el usuario:
+
+db.createUser({
+  user: "juan",
+  pwd: "1234",
+  roles: [
+    { role: "readWrite", db: "ventas" }
+  ]
+})
+
+Aquí el rol ya existe.
+
+🔹 Caso B: Quieres un rol personalizado
+
+Aquí SÍ debes:
+
+1️⃣ Crear el rol
+2️⃣ Luego crear el usuario y asignarle ese rol
+
+Ejemplo:
+
+Paso 1 — Crear rol
+
+db.createRole({
+  role: "soloInsertar",
+  privileges: [
+    {
+      resource: { db: "tienda", collection: "productos" },
+      actions: [ "insert" ]
+    }
+  ],
+  roles: []
+})
+
+Paso 2 — Crear usuario
+
+db.createUser({
+  user: "cajero",
+  pwd: "1234",
+  roles: [
+    { role: "soloInsertar", db: "tienda" }
+  ]
+})
+
+3️⃣ Orden correcto mental.
+
+Si usas roles del sistema: Crear usuario → asignar rol existente → listo
+Si usas roles personalizados: Crear rol → luego crear usuario → asignar rol
+
+4️⃣ Algo MUY importante que muchos no saben
+
+Un usuario puede tener:
+	- Varios roles
+	- Roles sobre distintas bases
+
+Ejemplo:
+
+roles: [
+  { role: "read", db: "ventas" },
+  { role: "readWrite", db: "inventario" }
+]
+
+Mongo suma los permisos.
+
+-------------------------------------------------------------------------
+
+En MongoDB, los roles son los que definen:
+	-  Qué acciones puede hacer el usuario
+	- Sobre qué base de datos (o recursos) puede hacerlas
+
+🔐 1️⃣ Qué definen los roles
+
+Un rol tiene privilegios, y cada privilegio tiene:
+	- Resource (recurso) → base de datos / colección / cluster
+	- Actions (acciones) → read, insert, update, remove, etc.
+
+Estructura mental: Rol → Privilegios → (Recurso + Acciones)
+
+🧩 2️⃣ Ejemplo simple
+db.createUser({
+  user: "ana",
+  pwd: "1234",
+  roles: [
+    { role: "readWrite", db: "ventas" }
+  ]
+})
+
+Esto significa:
+- Puede leer y escribir
+- Solo en la base ventas
+- No puede tocar otras bases
+
+🏗 3️⃣ ¿Qué pueden controlar los roles?
+
+Los roles pueden definir permisos sobre:
+
+🔹 A) Una base específica: { role: "readWrite", db: "ventas" }
+
+🔹 B) Todo el servidor (cluster): { role: "root", db: "admin" }
+	* Eso le da control total.
+🔹 C) Una colección específica (roles personalizados)
+
+	resource: { db: "tienda", collection: "productos" }
+	Aquí puedes limitar incluso a una sola colección.
+
+
+🛠 4️⃣ Tipos de acciones que pueden definirse. Algunas acciones posibles:
+
+. find (leer)
+. insert
+. update
+. remove
+. createCollection
+. dropCollection
+. createIndex
+. userAdmin
+. dbAdmin
+. clusterAdmin
+
+Los roles predefinidos ya agrupan estas acciones.
+
+🧠 5️⃣ Regla mental correcta
+
+No pienses: Usuario tiene permisos
+
+Piensa:
+	. Usuario → tiene Roles
+	. Roles → contienen Privilegios
+	. Privilegios → permiten Acciones sobre Recursos
+
+------------------------------------------------------------------------
+
+En MongoDB existen roles predefinidos (built-in roles).
+Estos roles ya vienen creados por el sistema y son simplemente paquetes de permisos.
+
+🧠 1️⃣ Qué significa “rol predefinido”
+
+Un rol predefinido es como un:
+
+Combo de permisos ya armado
+
+Por ejemplo:
+
+🔹 read.- No es solo “leer”. Internamente incluye acciones como:
+
+. find
+. listCollections
+. listIndexes
+. dbStats
+
+Es decir, Mongo agrupa varias acciones técnicas bajo el nombre “read”.
+
+🔹 readWrite.- Este rol incluye TODO lo de read más:
+
+. insert
+. update
+. remove
+. createCollection
+. createIndex
+. dropCollection (en ciertas condiciones)
+
+O sea: readWrite = read + permisos de escritura
+
+No tienes que definirlos uno por uno.
+
+🏗 2️⃣ Ejemplo práctico
+
+Cuando haces:
+
+db.createUser({
+  user: "juan",
+  pwd: "1234",
+  roles: [
+    { role: "readWrite", db: "ventas" }
+  ]
+})
+
+Mongo internamente entiende algo como:
+* Permitir:
+	- find
+	- insert
+	- update
+	- remove
+	- crear colecciones
+	- crear índices
+	- etc.
+* Sobre la base: ventas.
+
+Tú no ves las acciones individuales, pero existen.
+
+🔐 3️⃣ Otros roles importantes
+🔹 dbAdmin.- Permite:
+. Crear índices
+. Ver estadísticas
+. Modificar validaciones
+. Administrar estructura
+
+Pero NO necesariamente leer o escribir datos.
+
+🔹 userAdmin.- Permite:
+. Crear usuarios
+. Modificar roles
+. Eliminar usuarios
+
+🔹 root (en admin).- Este es el supercombo.
+Incluye prácticamente:
+- readWriteAnyDatabase
+- dbAdminAnyDatabase
+- userAdminAnyDatabase
+- clusterAdmin
+
+Es administrador total del servidor.
+
+🧩 4️⃣ Algo muy importante
+
+Los roles pueden:
+
+✔ Incluir múltiples privilegios
+✔ Heredar otros roles
+✔ Acumularse
+
+roles: [
+  { role: "read", db: "ventas" },
+  { role: "readWrite", db: "inventario" }
+]
+
+Mongo suma permisos.
+
+🧠 Regla mental final
+
+Piensa así:
+
+Rol predefinido = Grupo de acciones técnicas ya agrupadas
+Usuario = Persona que recibe ese grupo
+--------------------------------------------------------------
+
+1️⃣ Cómo funcionan los roles predefinidos
+
+Cuando usas un rol predefinido, como readWrite:
+
+. Solo lo declaras al crear el usuario.
+. Internamente Mongo ya agrupa un conjunto de acciones permitidas (find, insert, update, remove, etc.).
+. No ves inmediatamente todas las acciones exactas a menos que consultes la definición interna del rol.
+. Es rápido y práctico, pero menos control granular.
+
+Ejemplo:
+
+db.createUser({
+  user: "juan",
+  pwd: "1234",
+  roles: [{ role: "readWrite", db: "ventas" }]
+})
+
+Aquí Mongo automáticamente aplica todas las acciones de lectura y escritura sobre la base ventas.
+No necesitas especificar cada acción.
+
+2️⃣ Ventajas de crear roles personalizados
+
+. Si quieres control fino, especialmente en producción:
+. Definir exactamente qué acciones puede hacer el usuario.
+. Limitar a qué colecciones o bases se aplican esos permisos.
+. Evitar que usuarios tengan más permisos de los necesarios (principio de menor privilegio).
+
+Ejemplo de rol personalizado:
+
+db.createRole({
+  role: "soloInsertarProductos",
+  privileges: [
+    {
+      resource: { db: "tienda", collection: "productos" },
+      actions: ["insert"]
+    }
+  ],
+  roles: []
+})
+
+Luego asignas este rol al usuario:
+
+db.createUser({
+  user: "cajero",
+  pwd: "1234",
+  roles: [{ role: "soloInsertarProductos", db: "tienda" }]
+})
+
+✅ Resultado:
+El usuario solo puede insertar documentos en la colección productos de la base tienda.
+No puede leer, actualizar ni eliminar.
+
+3️⃣ Regla práctica
+
+. Usuarios administradores → pueden usar roles predefinidos (root, userAdmin)
+. Usuarios normales / apps → mejor crear roles personalizados con solo los permisos que necesitan
+
+4️⃣ Esquema mental: Usuario → Roles → Acciones → Recursos
+
+. Roles predefinidos → acciones predefinidas, rápido de usar, menos control
+. Roles personalizados → defines cada acción, máximo contro
+
+
+-------------------------------------------------------------------------
+COMANDOS
+
+use _database
+show dbs
+show collections
+shoe tables
+db.getUsers()
+
+------------------------------------
+db.createRole({
+	role: _nombreRol,
+	privileges: [{},{},...]
+	roles: [{},{},...]
+})
+
+------------------------------------
+🧩 2️⃣ privileges.- Es un array de privilegios: [{},{},{},...]
+
+Cada privilegio tiene:
+
+{
+  resource: { ... },
+  actions: [ ... ]
+}
+
+🧩 privileges: {resource: {db:... , collection:... }, actions: [...]}
+
+🔹 Opciones de resource.- Puedes definir el recurso de varias maneras:
+
+📌 A) Toda una BDD: 		resource: { db: "tienda", collection: "" }
+📌 B) Todas las BDD:		resource: { db: "", collection: "" }
+📌 C) Colección específica: 	resource: { db: "tienda", collection: "productos" }
+📌 D) Todo  el cluster (nivel servdidor)	resource: { cluster: true }
+
+
+🧩 3️⃣ Opciones de actions. Puedes combinar varias:
+
+actions: ["find", "insert", "update"]
+
+Algunas acciones comunes:
+
+📖 Lectura: 	"find"
+✍ Escritura: 	"insert", "update", "remove"
+🏗 Estructura: 	"createCollection", "dropCollection", "createIndex", "dropIndex"
+👤 Usuarios: 	"createUser", "dropUser", "grantRole", "revokeRole"
+📊 Administración: "dbStats", "collStats"
+⚙ Cluster: 	"shutdown", "replSetConfigure"
+
+🧩 4️⃣ roles (herencia)
+
+Puedes hacer que tu rol herede otros roles:
+
+roles: [
+  { role: "read", db: "tienda" }
+]
+
+Mongo suma permisos.
+--------------------------------
+🔹 Ejemplo 1 — Solo lectura en una colección
+use tienda
+
+db.createRole({
+  role: "lectorProductos",
+  privileges: [
+    {
+      resource: { db: "tienda", collection: "productos" },
+      actions: ["find"]
+    }
+  ],
+  roles: []
+})
+
+🔹 Ejemplo 2 — Insertar y actualizar en toda la base
+db.createRole({
+  role: "editorTienda",
+  privileges: [
+    {
+      resource: { db: "tienda", collection: "" },
+      actions: ["find", "insert", "update"]
+    }
+  ],
+  roles: []
+})
+
+🔹 Ejemplo 3 — Rol que hereda otro
+
+db.createRole({
+  role: "gestorCompleto",
+  privileges: [
+    {
+      resource: { db: "tienda", collection: "productos" },
+      actions: ["insert", "update"]
+    }
+  ],
+  roles: [
+    { role: "read", db: "tienda" }
+  ]
+})
+
+🎯 Regla mental final
+Rol =
+  - Nombre
+  - Privilegios (acciones sobre recursos)
+  - Roles heredados (opcional)
+
+---------------------------------------------
+* Mirar roles:
+
+use _dbName
+db.getRoles({ showPrivileges: true })
+
+Mirar acciones por rol:
+
+use _dbName
+db.getRole("_nameRol", { showPrivileges: true })
+
+* Mirar Useuarios
+
+use _db
+db.getUsers()
+db.getUser("_usuario")
+
+-------------------------------------------
+Ejemplo: Roles
+Usuario: lee
+Cajero: Inserta y lee
+Jefatura: crea collection, inserta y lee
+Supervisor: actualiza, remove, crea y borra collection, inserta y lee
+======================================================
+use admin
+db.createUser({
+  user: "admin",
+  pwd: "admin123",
+  roles: [ { role: "root", db: "admin" } ]
+})
+======================================================
+
+COMO PROBAR
+* Habilitar Security en mongod.cfg
+	- Abrir con notepad++
+	- Descomentar "Security"
+	- Escribir con 1 espacio de identación en l a siguiente línea de Security: authorization: enabled
+	security:
+  			authorization: "enabled"
+	- Guardar cambios
+	- Reiniciar el servicio mongo:
+		Por powershell:
+		. net stop MongoDB
+		. net start MongoDB
+		Por service: clic derecho stop y clic derecho iniciar
+
+* Antes de activar: asegurarse generar un user admin/root
+	
+* Ingresar a Powershell como administrador
+* Ubicarse en la carpeta /bin de mongo.
+cd "C:\Program Files\MongoDB\Server\8.2\bin"
+* Verificar version: 
+.\mongosh.exe --version
+* aplicar el acceso a mongosh:
+
+.\mongosh -u _username -p --authenticationDatabase _BbbDelUser _BddToCOnectarse
+
+*Luego ingrese el passwoord y probar permisos
+
+
+====================================================
+Probar sin salit de mongo.
+1.- Activar secutity
+2.- Aplicar: 
+	db.auth("admin", "tu_password")
+
+==========================
+=====>>>>
+
+super/sp1/supervisor
+anto/caja1/cajero
+jef/jefatura
+pperalta/user2/usuario
+anaguano/user1/usuario
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
